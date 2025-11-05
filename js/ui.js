@@ -32,22 +32,22 @@ function renderResults(username, list) {
     return;
   }
 
-results.innerHTML = `
-  <h3 class="results-title">Recommendations for ${username}</h3>
-  <div class="anime-grid">
-    ${list.map(item => {
-      const anime = item.anime;
-      return `
-        <div class="anime-item">
-          <a href="https://anilist.co/anime/${anime.id}" target="_blank" style="text-decoration:none;color:inherit;">
-            <img src="${anime.coverImage?.large || ''}">
-            <div class="title">
-              <div style="font-weight:600;">${anime.title?.romaji || "Unknown"}</div>
-            </div>
-          </a>
-        </div>`;
-    }).join("")}
-  </div>`;
+  results.innerHTML = `
+    <h3 class="results-title">Recommendations for ${username}</h3>
+    <div class="anime-grid">
+      ${list.map(item => {
+        const anime = item.anime;
+        return `
+          <div class="anime-item">
+            <a href="https://anilist.co/anime/${anime.id}" target="_blank" style="text-decoration:none;color:inherit;">
+              <img src="${anime.coverImage?.large || ''}">
+              <div class="title">
+                <div style="font-weight:600;">${anime.title?.romaji || "Unknown"}</div>
+              </div>
+            </a>
+          </div>`;
+      }).join("")}
+    </div>`;
 
 }
 

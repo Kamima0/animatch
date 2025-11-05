@@ -18,7 +18,6 @@ const RELEVANT_TAGS = [
   'agriculture',
   'alternate universe',
   'anachronism',
-  'animals',
   'anthology',
   'anthropomorphism',
   'anti-hero',

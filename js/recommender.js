@@ -68,17 +68,17 @@ async function recommend(username) {
     if (v.tagRelevance <= 0) { userTagScores[k] = 0; continue; }
     const tagMean = v.weightedSum / v.tagRelevance; // 0..100 average score for this tag
     const diff = (tagMean - userMean) / 100;  // -1..1
-    const shr = shrink(diff, v.tagRelevance, TAG_SHRINKAGE_K);
-    userTagScores[k] = shr;
+    userTagScores[k] = shrink(diff, v.tagRelevance, TAG_SHRINKAGE_K);
   }
 
   // determine top genres and top tags to use for candidate fetching
   let genreCandidates = Object.entries(likedGenreScores).sort((a,b) => b[1]-a[1]).map(e => e[0]);
-  if (!genreCandidates.length) genreCandidates = Object.entries(genreScores).sort((a,b)=>Math.abs(b[1]) - Math.abs(a[1])).map(e=>e[0]);
   const GENRES_TO_FETCH = genreCandidates.slice(0, GENRES_TO_FETCH_COUNT);
 
-  // top user tags by importance
-  const tagsSorted = Object.entries(userTagScores).sort((a,b) => Math.abs(b[1]) - Math.abs(a[1])).map(e => e[0]);
+  const tagsSorted = Object.entries(userTagScores)
+    .filter(([_, score]) => score > 0)
+    .sort((a, b) => b[1] - a[1])
+    .map(e => e[0]);
   const TAGS_TO_FETCH = tagsSorted.slice(0, TAGS_TO_FETCH_COUNT);
 
   // fetch candidates
@@ -96,17 +96,8 @@ async function recommend(username) {
     (list || []).forEach(m => { if (m?.id) candidateMap.set(m.id, m); });
   });
   const candidates = Array.from(candidateMap.values());
-  const totalCandidates = candidates.length || 1;
 
-  const userTagWeights = {};
-  let sumPos = 0, sumNeg = 0;
-  for (const [k, weight] of Object.entries(userTagScores)) {
-    userTagWeights[k] = weight;
-    if (weight > 0) sumPos += weight;
-    else if (weight < 0) sumNeg += Math.abs(weight);
-  }
-
-  // score each candidate:
+  // score each candidate
   const candidateScores = candidates.map(a => {
     // genre alignment
     const posAlignRaw = (a.genres || []).reduce((s, g) => s + (posGenreWeights[lower(g)] || 0), 0);
@@ -120,7 +111,7 @@ async function recommend(username) {
       const k = lower(t.name);
       if (!RELEVANT_TAGS.includes(k)) return;
       const rel = Math.min(1, (t.rank || 0) / 100);
-      const weight = userTagWeights[k] || 0;
+      const weight = userTagScores[k] || 0;
       if (weight > 0) { posNum += weight * rel; posDen += weight; }
       else if (weight < 0) { negNum += Math.abs(weight) * rel; negDen += Math.abs(weight); }
     });
@@ -128,7 +119,7 @@ async function recommend(username) {
     const negScore = negDen ? (negNum / negDen) : 0;
     let tagAlignment = clamp(posScore - (NEGATIVE_TAG_FACTOR * negScore), 0, 1);
 
-    // combine: tags amplify genre. If no positive genres, rely on tags alone.
+    // combine: tags amplify genre. If no positive genres, rely on tags alone
     let combined;
     if (Object.keys(posGenreWeights).length > 0) {
       combined = genreScore * (1 + TAG_MULTIPLIER * Math.pow(tagAlignment, TAG_EXPONENT));
@@ -139,7 +130,6 @@ async function recommend(username) {
   });
 
   // filtering
-  const allIds = new Set(candidates.map(c => c.id));
   let filteredCandidates = candidateScores.filter(item => {
     const a = item.anime;
     if (watchedIds.has(a.id)) return false;
@@ -157,6 +147,7 @@ async function recommend(username) {
     if (hasMorePopularPrequel) return false;
 
     if (a.format === "MUSIC" || a.format === "SPECIAL") return false;
+    if (a.episodes === 1 && a.duration < 5) return false;
 
     return true;
   });

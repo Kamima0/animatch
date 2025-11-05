@@ -41,7 +41,7 @@ async function fetchCandidates({ type = "genre", value, pages }) {
       Page(page: $page, perPage: $perPage) {
         media(${filterField}: [$value], type: ANIME, sort: POPULARITY_DESC) {
           id title { romaji } coverImage { large }
-          genres format popularity tags { name rank isMediaSpoiler }
+          genres format episodes duration popularity tags { name rank isMediaSpoiler }  
           relations { edges { relationType node { id popularity } } }
         }
       }
