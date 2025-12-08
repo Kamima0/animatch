@@ -1,5 +1,5 @@
 # AniMatch
-## Video Demo:  <URL HERE>
+## Video Demo: https://youtu.be/B1wiyrIwxq0?si=8TGNPkKogHAxQ0e3
 ## Description:
 A website that generates personalized anime recommendations by analyzing a user’s AniList account data. It does this entirely on the client side using JavaScript, by querying the AniList GraphQL API, extracting genre and tag information from the user’s watched list, and computing a ranked list of recommended titles based on the user preferences.\
 The project is organized into several JavaScript files that collectively perform data retrieval, statistical analysis, filtering and rendering of recommendations.
